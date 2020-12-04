@@ -1,9 +1,14 @@
 var map;
 var markers = {};
-var gis = new kmGIS()
+var gis = null;
+var lplace = null;
 var placeMarker = null;
 var placeLocation = null;
 var isPlace = false;
+
+/**
+ * ------kmGIS start
+ */
 function kmGIS() {
 }
 
@@ -97,7 +102,74 @@ kmGIS.prototype.getByName = function(name) {
     })
 }
 
+/**
+ * ------kmGIS end
+ */
 
+ /**
+  * ------ Place start
+  */
+ function Place(map, target) {
+     this.status = false;
+     this.marker = null;
+     this.location = null;
+     this.map = map;
+     this.place_object = target;
+ }
+
+ Place.prototype.start = function() {
+     var t_this = this;
+     this.status = true;
+     this.place_object.text("正在放")
+     this.map.on('click', function(e){
+        t_this.onMapClick(e, t_this)
+     });
+ }
+
+ Place.prototype.end = function() {
+     this.status = false;
+     this.place_object.text("放")
+     this.map.off('click');
+ }
+
+ Place.prototype.switch = function() {
+     if (!this.status) {
+         this.start();
+     } else {
+         this.end();
+     }
+ }
+
+
+ Place.prototype.onMapClick = function(e, target) {
+    const blackIcon = new L.Icon({
+            iconUrl:
+              "https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-black.png",
+            shadowUrl:
+              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+          });
+    var marker = L.marker([e.latlng.lat, e.latlng.lng], {title: "點在這", icon:blackIcon});
+    marker.bindPopup(`${e.latlng.lat},${e.latlng.lng}`);
+    marker.addTo(target.map);
+    target.location = e.latlng;
+    if (target.marker != null) {
+        target.map.removeLayer(target.marker);
+    }
+    target.marker = marker;
+}
+
+Place.prototype.clear = function() {
+    this.map.removeLayer(this.marker);
+    this.marker = null;
+    this.end();
+}
+ /**
+  * ------ Place end
+  */
 function keyup(e) {
     var name = $('.name').val();
     gis.getByName(name)
@@ -133,50 +205,16 @@ function ra() {
     Object.values(markers).forEach(m => {
         map.removeLayer(m);
     });
-    map.removeLayer(placeMarker);
-    placeMarker = null;
-    isPlace = false;
-    map.off('click');
-    $(".place").text("放")
+    lplace.clear();
 }
 
 function place() {
-    if (!isPlace) {
-        map.on('click', onMapClick);
-        $(".place").text("正在放")
-        isPlace = !isPlace
-    }else {
-        map.off('click');
-        $(".place").text("放")
-        isPlace = !isPlace
-    }
-}
-
-function onMapClick(e) {
-    const blackIcon = new L.Icon({
-            iconUrl:
-              "https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-black.png",
-            shadowUrl:
-              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-          });
-    
-    var marker = L.marker([e.latlng.lat, e.latlng.lng], {title: "點在這", icon:blackIcon});
-    marker.bindPopup(`${e.latlng.lat},${e.latlng.lng}`);
-    marker.addTo(map);
-    placeLocation = e.latlng;
-    if (placeMarker != null) {
-        map.removeLayer(placeMarker);
-    }
-    placeMarker = marker;
+    lplace.switch();
 }
 
 function getNearBy() {
     const scope = $(".distance").val(); 
-    gis.wgs84totwd97(placeLocation.lat, placeLocation.lng)
+    gis.wgs84totwd97(lplace.location.lat, lplace.location.lng)
         .then(function(d1){
             console.log(d1);
             gis.nearby(d1.x, d1.y, scope)
@@ -209,14 +247,12 @@ function setEvent() {
 
 $('document').ready(function(){
     map = L.map('map').setView([24.446781, 118.376470], 12)
-    var google = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
-        maxZoom: 20,
-        subdomains:['mt0','mt1','mt2','mt3']
-    })
     var osmUrl='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
     var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 16});
     map.addLayer(osm);
-    //map.addLayer(google);
+
+    gis = new kmGIS()
+    lplace = new Place(map, $(".place"));
     setEvent()
 })
 
