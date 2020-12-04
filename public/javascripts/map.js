@@ -7,7 +7,7 @@ function kmGIS() {
 kmGIS.prototype.getAll = function() {
     return new Promise(function(resolve, reject){
         $.ajax({
-            url: `https://kpp.kmn.tw/kmgis/kmgis/all`,
+            url: `https://kpp.kmn.tw/kmgis/all`,
             type: 'GET',
             contentType: 'application/json; charset=utf-8',
             statusCode: {
