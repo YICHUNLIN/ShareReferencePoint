@@ -4,6 +4,42 @@ var gis = new kmGIS()
 function kmGIS() {
 }
 
+kmGIS.prototype.twd97Towgs84 = function(x, y) {
+    return new Promise(function(resolve, reject){
+        $.ajax({
+            url: `https://kpp.kmn.tw/kmgis/twd97towgs84?x=${x}&y=${y}`,
+            type: 'GET',
+            contentType: 'application/json; charset=utf-8',
+            statusCode: {
+                200: function (data) {
+                    resolve(data);
+                },
+                404: function(data) {
+                    reject(data);
+                }
+            }
+        });
+    })
+}
+
+kmGIS.prototype.wgs84totwd97 = function(lat, lng) {
+    return new Promise(function(resolve, reject){
+        $.ajax({
+            url: `https://kpp.kmn.tw/kmgis/wgs84totwd97?x=${lat}&y=${lng}`,
+            type: 'GET',
+            contentType: 'application/json; charset=utf-8',
+            statusCode: {
+                200: function (data) {
+                    resolve(data);
+                },
+                404: function(data) {
+                    reject(data);
+                }
+            }
+        });
+    })
+}
+
 kmGIS.prototype.getByName = function(name) {
     return new Promise(function(resolve, reject){
         $.ajax({
