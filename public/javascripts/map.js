@@ -206,6 +206,7 @@ function ra() {
         map.removeLayer(m);
     });
     lplace.clear();
+    markers = {};
 }
 
 function place() {
