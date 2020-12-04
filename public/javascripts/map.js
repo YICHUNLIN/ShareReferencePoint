@@ -3,6 +3,7 @@ var markers = {};
 var gis = new kmGIS()
 var placeMarker = null;
 var placeLocation = null;
+var isPlace = false;
 function kmGIS() {
 }
 
@@ -132,18 +133,22 @@ function ra() {
     Object.values(markers).forEach(m => {
         map.removeLayer(m);
     });
-
     map.removeLayer(placeMarker);
     placeMarker = null;
+    isPlace = false;
+    map.off('click');
+    $(".place").text("放")
 }
 
 function place() {
-    if (!placeMarker) {
+    if (!isPlace) {
         map.on('click', onMapClick);
         $(".place").text("正在放")
+        isPlace = !isPlace
     }else {
         map.off('click');
         $(".place").text("放")
+        isPlace = !isPlace
     }
 }
 
