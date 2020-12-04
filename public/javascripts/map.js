@@ -4,6 +4,24 @@ var gis = new kmGIS()
 function kmGIS() {
 }
 
+kmGIS.prototype.getAll = function() {
+    return new Promise(function(resolve, reject){
+        $.ajax({
+            url: `http://localhost:3000/kmgis/all`,
+            type: 'GET',
+            contentType: 'application/json; charset=utf-8',
+            statusCode: {
+                200: function (data) {
+                    resolve(data);
+                },
+                404: function(data) {
+                    reject(data);
+                }
+            }
+        });
+    })
+}
+
 kmGIS.prototype.twd97Towgs84 = function(x, y) {
     return new Promise(function(resolve, reject){
         $.ajax({
@@ -63,12 +81,26 @@ function keyup(e) {
     var name = $('.name').val();
     gis.getByName(name)
         .then(function(data){
-            if (!markers.hasOwnProperty(name)) { var marker = L.marker([data.data.wgs84.lat, data.data.wgs84.lng]);
+            if (!markers.hasOwnProperty(name)) { 
+                var marker = L.marker([data.data.wgs84.lat, data.data.wgs84.lng]);
                 marker.addTo(map);
                 markers[name] = marker;
                 marker.bindPopup(`<b>編號:${data.data.name}</b><br>高程:${data.data.ele}<br>wgs84: ${data.data.wgs84.lat},${data.data.wgs84.lng}<br>twd97:${data.data.twd97.x},${data.data.twd97.y}`).openPopup();
             }
            $('.name').val("")
+        })
+        .catch(function(err){
+        })
+}
+function all() {
+    gis.getAll()
+        .then(function(data){
+            data.data.forEach(function(point){
+                var marker = L.marker([point.wgs84.lat, point.wgs84.lng]);
+                marker.addTo(map);
+                markers[point.name] = marker;
+                marker.bindPopup(`<b>編號:${point.name}</b><br>高程:${point.ele}<br>wgs84: ${point.wgs84.lat},${point.wgs84.lng}<br>twd97:${point.twd97.x},${point.twd97.y}`);
+            })
         })
         .catch(function(err){
         })
@@ -83,6 +115,7 @@ function ra() {
 function setEvent() {
     $(".confirm").on('click', keyup);
     $(".reset").on('click', ra)
+    $(".all").on('click', all)
 }
 
 
